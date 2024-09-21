@@ -7,6 +7,8 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import jwtConfig from './config/jwt-config';
 import dbConfig from './config/db-config';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './guards/auth.guards';
 
 @Module({
   imports: [
@@ -26,7 +28,11 @@ import dbConfig from './config/db-config';
     UserModule, AuthModule
   ],
   controllers: [],
-  providers: [],
+  providers: [    {
+    provide: APP_GUARD,
+    useClass: AuthGuard
+    ,
+  },],
 })
 
 export class AppModule {}
