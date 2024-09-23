@@ -8,6 +8,8 @@ import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
 import { refreshTokenDto } from './dto/refresh-token-dto';
 import { RefreshTokenService } from './refresh-token-service';
+import { changePasswordDto } from './dto/change-password.dto';
+import { IsEmail } from 'class-validator';
 
 @Injectable()
 export class AuthService {
@@ -20,14 +22,12 @@ export class AuthService {
         const {username, email, password} = data;
 
         const user = await this.userService.findByEmail(email, ['id', 'email', 'password']);
-        
+       
         if(user){
             throw new BadRequestException("Email already in use");
         }       
 
-        const saltRounds: number = Number(this.configService.get('SALT_ROUNDS'));
-        const hashedPassword: string = await bcrypt.hash(password, saltRounds);
-      
+        const hashedPassword: string = await this.hashPassword(password);      
         data.password  = hashedPassword;
 
         const result = await this.userService.create(data);
@@ -38,7 +38,7 @@ export class AuthService {
     async login(data: signInDto): Promise<any>{
         const {email, password} = data;
 
-        const  user = await this.userService.findByEmail(email, ['id', 'email', 'password']);
+        const  user = await this.userService.findByEmail(email, ['id', 'email', 'password', 'username']);
         
         if(!user){
             throw new UnauthorizedException("Wrong Credentials");
@@ -50,8 +50,31 @@ export class AuthService {
             throw new UnauthorizedException("Wrong Credentials");
         }
 
-        return this.generateToken( user.id, user.username,);
+        return this.generateToken( user.id, user.username);
 
+    }
+
+    async changePassword(data: changePasswordDto, userId: number): Promise<any>{
+        if(!userId){
+            throw new BadRequestException("Data missing");
+        }
+        const user = await this.userService.findById(userId,  ['password']);
+   
+        if(!user){
+            throw new UnauthorizedException("Wrong Credentials");
+        }
+
+        const isPasswordMatched = await bcrypt.compare(data.oldPassword, user.password);
+
+        if(!isPasswordMatched){
+           
+            throw new UnauthorizedException("Wrong Credentials");
+        }
+
+        //hash new password
+        const newHashedPassword = await this.hashPassword(data.newPassword);
+        
+        return this.userService.updatePassword(userId, newHashedPassword);
     }
 
     async getTokenFromRefreshToken(refTokenDto: refreshTokenDto):  Promise<any>{
@@ -69,13 +92,13 @@ export class AuthService {
         
     }
 
-    async generateToken(userId: number,  userName: string){
+    private async generateToken(userId: number,  userName: string){
         const acessToken = this.jwtService.sign({userName, userId});
 
         // Find token that haven't expired
         const dbRefToken = await this.refreshTokenService.getRefreshTokenFromUserId(userId);
         
-        if(dbRefToken){
+        if(dbRefToken != null){
             return {acessToken,  'refreshToken': dbRefToken.token};
 
         }
@@ -84,6 +107,11 @@ export class AuthService {
         this.refreshTokenService.create(refreshToken, userId);
 
         return {acessToken,  refreshToken};
+    }
+
+    private async hashPassword(password: string){
+        const saltRounds: number = Number(this.configService.get('SALT_ROUNDS'));
+        return await bcrypt.hash(password, saltRounds);
     }
 
 }

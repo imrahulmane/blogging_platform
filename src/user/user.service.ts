@@ -25,12 +25,27 @@ export class UserService {
       return await this.userRepository.find();
     }
     
-    async findById(id: number): Promise<User|null>{
-      return await this.userRepository.findOne({where:{id: id}});
+    async findById(id: number, projection: (keyof UserEntity)[]=[]): Promise<User|null>{
+      return await this.userRepository.findOne({
+        where:{id: id},
+        select: projection.length > 0 ? projection : undefined});
     }
 
     async update(id: number, userDto: UserUpdateDto): Promise<User|null>{
       await this.userRepository.update(id, userDto);
       return this.findById(id);
     }
+
+    async findOne(filters: Object, projection:(keyof UserEntity)[]=[]): Promise<User|null>{
+      return await this.userRepository.findOne({
+        where : filters,
+        select: projection.length > 0 ? projection : undefined
+      })
+    }
+
+    async updatePassword(id: number, password: string): Promise<User|null>{
+      await this.userRepository.update(id, {password});
+      return this.findById(id);
+    }
+
 }

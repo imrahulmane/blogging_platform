@@ -1,8 +1,9 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Put, Req, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserDto } from 'src/user/dto/user-dto';
 import { signInDto } from './dto/signIn-dto';
 import { refreshTokenDto } from './dto/refresh-token-dto';
+import { changePasswordDto } from './dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -21,5 +22,10 @@ export class AuthController {
     @Post('refresh')
     refreshToken(@Body() body: refreshTokenDto){
         return this.authService.getTokenFromRefreshToken(body);
+    }
+
+    @Put('change-password')
+    changePassword(@Body() changePasswordDto: changePasswordDto, @Req() req){
+        return this.authService.changePassword(changePasswordDto, req.userId);
     }
 }

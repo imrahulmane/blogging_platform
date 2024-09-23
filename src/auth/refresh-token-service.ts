@@ -9,12 +9,12 @@ export class RefreshTokenService{
     constructor(@InjectRepository(RefreshToken) private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly configService: ConfigService, ){}
 
-    async create(token:  string, userId: number): Promise<void>{
+    async create(token:  string, user_id: number): Promise<void>{
         const expiredAfterDays = Number(this.configService.get('REFRESH_TOKEN_EXPIRY'));
         const expires_in = new Date();
         expires_in.setDate(expires_in.getDate() + expiredAfterDays); 
 
-        await this.refreshTokenRepository.save({token, userId, expires_in});
+        await this.refreshTokenRepository.save({token, user_id, expires_in});
     }
 
     async getRefreshTokenFromUserId(userId: number): Promise<RefreshToken|null>{
