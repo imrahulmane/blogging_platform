@@ -19,7 +19,7 @@ export class AuthService {
     async signUp(data: UserDto): Promise<any> {
         const {username, email, password} = data;
 
-        const user = await this.userService.findByEmail(email);
+        const user = await this.userService.findByEmail(email, ['id', 'email', 'password']);
         
         if(user){
             throw new BadRequestException("Email already in use");
@@ -38,7 +38,7 @@ export class AuthService {
     async login(data: signInDto): Promise<any>{
         const {email, password} = data;
 
-        const  user = await this.userService.findByEmail(email);
+        const  user = await this.userService.findByEmail(email, ['id', 'email', 'password']);
         
         if(!user){
             throw new UnauthorizedException("Wrong Credentials");
@@ -85,6 +85,5 @@ export class AuthService {
 
         return {acessToken,  refreshToken};
     }
-
 
 }

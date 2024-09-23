@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity as User, UserEntity } from './user.entity';
 import { UserDto } from './dto/user-dto';
+import { UserUpdateDto } from './dto/user-update-dto';
 
 @Injectable()
 export class UserService {
@@ -13,8 +14,11 @@ export class UserService {
         return result;
     }
 
-    async findByEmail(email:  string):  Promise<User|null>{
-      return await this.userRepository.findOne({where:{email}})
+    async findByEmail(email:  string, projection: (keyof UserEntity)[]=[]):  Promise<User|null>{
+      return await this.userRepository.findOne({
+          where:{email}, 
+          select: projection.length > 0 ? projection : undefined
+        })
     }
 
     async findAll(): Promise<UserEntity[]>{
@@ -23,5 +27,10 @@ export class UserService {
     
     async findById(id: number): Promise<User|null>{
       return await this.userRepository.findOne({where:{id: id}});
+    }
+
+    async update(id: number, userDto: UserUpdateDto): Promise<User|null>{
+      await this.userRepository.update(id, userDto);
+      return this.findById(id);
     }
 }

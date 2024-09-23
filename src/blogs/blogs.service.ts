@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,19 +20,35 @@ export class BlogsService {
   }
 
   async findOne(id: number) {
+    if(!id){
+      throw new BadRequestException("Required id missing")
+    }
+
     return await this.blogRepository.findOne({where : {id}});
   }
 
   async update(id: number, updateBlogDto: UpdateBlogDto) {
+    if(!id){
+      throw new BadRequestException("Required id missing")
+    }
+
     await this.blogRepository.update(id, updateBlogDto);
     return this.findOne(id);
   }
 
   async remove(id: number) {
+    if(!id){
+      throw new BadRequestException("Required id missing")
+    }
+
     return this.blogRepository.delete(id);
   }
 
   async findAllBlogsOfParticularUser(user_id: number){
+    if(!user_id){
+      throw new BadRequestException("Required user ID missing")
+    }
+
     return await this.blogRepository.findAndCount({where : {user_id : user_id}});
   }
 }

@@ -9,9 +9,23 @@ import jwtConfig from './config/jwt-config';
 import dbConfig from './config/db-config';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guards';
+import { BlogsModule } from './blogs/blogs.module';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
 
 @Module({
   imports: [
+    WinstonModule.forRoot({
+      transports: [
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.simple(),
+          ),
+        }),
+        new winston.transports.File({ filename: 'app.log' }),
+      ],
+    }),
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env', load : [jwtConfig, dbConfig]}),  // Global configuration module
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -25,7 +39,7 @@ import { AuthGuard } from './guards/auth.guards';
       useFactory: (config: ConfigService) => config.get('jwt'),
       global: true
     }),
-    UserModule, AuthModule
+    UserModule, AuthModule, BlogsModule
   ],
   controllers: [],
   providers: [    {
