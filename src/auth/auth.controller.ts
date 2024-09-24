@@ -4,6 +4,8 @@ import { UserDto } from 'src/user/dto/user-dto';
 import { signInDto } from './dto/signIn-dto';
 import { refreshTokenDto } from './dto/refresh-token-dto';
 import { changePasswordDto } from './dto/change-password.dto';
+import { forgotPasswordDto } from './dto/forgot-password.dto';
+import { resetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -27,5 +29,15 @@ export class AuthController {
     @Put('change-password')
     changePassword(@Body() changePasswordDto: changePasswordDto, @Req() req){
         return this.authService.changePassword(changePasswordDto, req.userId);
+    }
+
+    @Post('forgot-password')
+    forgotPassword(@Body() forgotPasswordDto: forgotPasswordDto){
+        return this.authService.forgotPassword(forgotPasswordDto);
+    }
+
+    @Post('reset-password')
+    resetPassword(@Body() resetPasswordDto: resetPasswordDto){
+        return this.authService.resetPassword(resetPasswordDto);
     }
 }

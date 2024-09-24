@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { UserDto } from 'src/user/dto/user-dto';
 import { UserService } from 'src/user/user.service';
 import { signInDto } from './dto/signIn-dto';
@@ -9,14 +9,20 @@ import { v4 as uuidv4 } from 'uuid';
 import { refreshTokenDto } from './dto/refresh-token-dto';
 import { RefreshTokenService } from './refresh-token-service';
 import { changePasswordDto } from './dto/change-password.dto';
-import { IsEmail } from 'class-validator';
+import { forgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetTokenService } from './reset-token.service';
+import { nanoid } from 'nanoid';
+import { MailService } from 'src/services/mail.service';
+import { resetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
     constructor(private readonly userService: UserService,
         private readonly configService: ConfigService,
         private readonly jwtService: JwtService,
-        private readonly refreshTokenService: RefreshTokenService){}
+        private readonly refreshTokenService: RefreshTokenService,
+        private readonly resetTokeService: ResetTokenService,
+        private readonly mailService: MailService){}
 
     async signUp(data: UserDto): Promise<any> {
         const {username, email, password} = data;
@@ -73,8 +79,41 @@ export class AuthService {
 
         //hash new password
         const newHashedPassword = await this.hashPassword(data.newPassword);
-        
         return this.userService.updatePassword(userId, newHashedPassword);
+    }
+
+    async forgotPassword(data: forgotPasswordDto): Promise<any>{
+        const user = await this.userService.findByEmail(data.email);
+
+        if(user){
+            const token = nanoid(64);
+            await this.resetTokeService.create(user.id, token);
+
+            //send email
+            this.mailService.sendPasswordResetEmail(data.email, token);
+        }
+
+        return {"result" : "Please check your email for password reset link"};
+    }
+
+    async resetPassword(data: resetPasswordDto): Promise<any>{
+        //check valid token
+        const validToken = await this.resetTokeService.findOne(data.token);
+
+        if(!validToken){
+            throw new UnauthorizedException('Invalid Link')
+        }
+
+        //check valid user
+        const user = await this.userService.findById(validToken.user_id);
+
+        if(!user){
+            throw new InternalServerErrorException();
+        }
+
+        //change password
+        const hashedPassword = await this.hashPassword(data.newPassword);
+        return this.userService.updatePassword(validToken.user_id, hashedPassword);
     }
 
     async getTokenFromRefreshToken(refTokenDto: refreshTokenDto):  Promise<any>{
