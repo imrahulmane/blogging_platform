@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -12,20 +12,22 @@ import { AuthGuard } from './guards/auth.guards';
 import { BlogsModule } from './blogs/blogs.module';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
+import { LoggerMiddleware } from './middlewares/logger.middleware';
 
 @Module({
   imports: [
-    WinstonModule.forRoot({
-      transports: [
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.simple(),
-          ),
-        }),
-        new winston.transports.File({ filename: 'app.log' }),
-      ],
-    }),
+    // WinstonModule.forRoot({
+    //   transports: [
+    //     new winston.transports.Console({
+    //       format: winston.format.combine(
+    //         winston.format.timestamp(),
+    //         winston.format.simple(),
+    //       ),
+    //     }),
+    //     new winston.transports.File({ filename: 'app.log' }),
+    //   ],
+    // }),
+    
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env', load : [jwtConfig, dbConfig]}),  // Global configuration module
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -49,4 +51,10 @@ import * as winston from 'winston';
   },],
 })
 
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggerMiddleware) // Apply the middleware globally
+      .forRoutes('*'); // '*' indicates all routes
+  }
+}
