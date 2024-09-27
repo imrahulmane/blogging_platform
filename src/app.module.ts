@@ -16,18 +16,6 @@ import { LoggerMiddleware } from './middlewares/logger.middleware';
 
 @Module({
   imports: [
-    // WinstonModule.forRoot({
-    //   transports: [
-    //     new winston.transports.Console({
-    //       format: winston.format.combine(
-    //         winston.format.timestamp(),
-    //         winston.format.simple(),
-    //       ),
-    //     }),
-    //     new winston.transports.File({ filename: 'app.log' }),
-    //   ],
-    // }),
-    
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env', load : [jwtConfig, dbConfig]}),  // Global configuration module
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

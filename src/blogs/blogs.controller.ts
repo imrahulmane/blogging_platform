@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { BlogsService } from './blogs.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
@@ -15,6 +15,11 @@ export class BlogsController {
   @Get()
   async findAll() {
     return await this.blogsService.findAll();
+  }
+
+  @Get('/search')
+  async searchBlogs(@Query("term") term: string){
+    return await this.blogsService.searchBlogs(term);
   }
 
   @Get(':id')

@@ -2,6 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { Request } from 'express';
+import { DeleteDateColumn } from 'typeorm';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -22,8 +23,9 @@ export class AuthGuard implements CanActivate {
       { method: 'POST', path: '/auth/forgot-password' },
       { method: 'POST', path: '/auth/reset-password' },
       { method: 'GET', path: '/blogs' },
+      { method: 'GET', path: '/blogs/search' },
     ];
-    
+
     // Check if the current route matches any of the excluded routes
     const isExcluded = excludedRoutes.some(
       (r) => r.method === request.method && r.path === request.route.path.replace('/api/v1', '')
