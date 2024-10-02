@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { BlogsService } from './blogs.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
@@ -17,6 +17,11 @@ export class BlogsController {
     return await this.blogsService.findAll();
   }
 
+  @Get('/search')
+  async searchBlogs(@Query("term") term: string){
+    return await this.blogsService.searchBlogs(term);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: number) {
     return await this.blogsService.findOne(+id);
@@ -33,7 +38,7 @@ export class BlogsController {
   }
 
   @Get('/user/:id')
-  async getBlogsOfParticularUser(@Param("id") user_id: number){
+  async getBlogsOfParticularUser(@Param('id') user_id: number) {
     return await this.blogsService.findAllBlogsOfParticularUser(user_id);
   }
 }

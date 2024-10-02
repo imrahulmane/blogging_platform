@@ -1,15 +1,18 @@
-import { BaseEntity } from "src/entities/base.entity";
-import { Column, Entity } from "typeorm";
+import { Blog } from 'src/blogs/entities/blog.entity';
+import { BaseEntity } from 'src/entities/base.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
 
-@Entity('users') 
+@Entity('users')
 export class UserEntity extends BaseEntity {
-    @Column()
-    username: string
+  @Column()
+  username: string;
 
-    @Column({unique: true})
-    email: string
+  @Column({ unique: true })
+  email: string;
 
-    @Column()
-    password: string
+  @Column({ select: false })
+  password: string;
 
+  @OneToMany(() => Blog, (blog) => blog.user)
+  blogs: Blog[];
 }

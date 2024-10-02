@@ -1,8 +1,8 @@
 import { BaseEntity } from 'src/entities/base.entity';
 import { Column, Entity } from 'typeorm';
 
-@Entity('refresh_tokens')
-export class RefreshTokenEntity extends BaseEntity {
+@Entity('reset_tokens')
+export class ResetTokenEntity extends BaseEntity {
   @Column()
   token: string;
 
