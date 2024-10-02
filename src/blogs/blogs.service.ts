@@ -8,8 +8,8 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class BlogsService {
   constructor(
-    @InjectRepository(Blog) private readonly blogRepository: Repository<Blog>
-  ){}
+    @InjectRepository(Blog) private readonly blogRepository: Repository<Blog>,
+  ) {}
 
   async create(createBlogDto: CreateBlogDto) {
     return await this.blogRepository.save(createBlogDto);
@@ -20,16 +20,16 @@ export class BlogsService {
   }
 
   async findOne(id: number) {
-    if(!id){
-      throw new BadRequestException("Required id missing")
+    if (!id) {
+      throw new BadRequestException('Required id missing');
     }
 
-    return await this.blogRepository.findOne({where : {id}});
+    return await this.blogRepository.findOne({ where: { id } });
   }
 
   async update(id: number, updateBlogDto: UpdateBlogDto) {
-    if(!id){
-      throw new BadRequestException("Required id missing")
+    if (!id) {
+      throw new BadRequestException('Required id missing');
     }
 
     await this.blogRepository.update(id, updateBlogDto);
@@ -37,29 +37,36 @@ export class BlogsService {
   }
 
   async remove(id: number) {
-    if(!id){
-      throw new BadRequestException("Required id missing")
+    if (!id) {
+      throw new BadRequestException('Required id missing');
     }
 
     return this.blogRepository.delete(id);
   }
 
-  async findAllBlogsOfParticularUser(user_id: number){
-    if(!user_id){
-      throw new BadRequestException("Required user ID missing")
+  async findAllBlogsOfParticularUser(user_id: number) {
+    if (!user_id) {
+      throw new BadRequestException('Required user ID missing');
     }
 
-    return await this.blogRepository.findAndCount({where : {user_id : user_id}});
+    return await this.blogRepository.findAndCount({
+      where: { user_id: user_id },
+    });
   }
 
-  async searchBlogs(searchTerm: string){
-    if(!searchTerm || searchTerm.length < 3){
-      throw new BadRequestException("Search term must be at least 3 characters");
+  async searchBlogs(searchTerm: string) {
+    if (!searchTerm || searchTerm.length < 3) {
+      throw new BadRequestException(
+        'Search term must be at least 3 characters',
+      );
     }
-  
-    return this.blogRepository.createQueryBuilder('blog')
-    .where('blog.title LIKE :searchTerm', {searchTerm : `%${searchTerm}%`})
-    .orWhere('blog.content LIKE :searchTerm', {searchTerm : `%${searchTerm}%`})
-    .getMany()
+
+    return this.blogRepository
+      .createQueryBuilder('blog')
+      .where('blog.title LIKE :searchTerm', { searchTerm: `%${searchTerm}%` })
+      .orWhere('blog.content LIKE :searchTerm', {
+        searchTerm: `%${searchTerm}%`,
+      })
+      .getMany();
   }
 }

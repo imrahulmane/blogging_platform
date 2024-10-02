@@ -1,14 +1,14 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateBlogDto } from './create-blog.dto';
-import { IsBoolean, IsString, isBoolean } from 'class-validator';
+import { IsBoolean, IsString } from 'class-validator';
 
 export class UpdateBlogDto extends PartialType(CreateBlogDto) {
-    @IsString()
-    title: string;
+  @IsString()
+  title: string;
 
-    @IsString()
-    content: string;
+  @IsString()
+  content: string;
 
-    @IsBoolean()
-    isPublished: boolean
+  @IsBoolean()
+  isPublished: boolean;
 }

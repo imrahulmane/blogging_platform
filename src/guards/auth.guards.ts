@@ -1,12 +1,16 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { Request } from 'express';
-import { DeleteDateColumn } from 'typeorm';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private JwtService: JwtService){}
+  constructor(private JwtService: JwtService) {}
 
   canActivate(
     context: ExecutionContext,
@@ -28,7 +32,9 @@ export class AuthGuard implements CanActivate {
 
     // Check if the current route matches any of the excluded routes
     const isExcluded = excludedRoutes.some(
-      (r) => r.method === request.method && r.path === request.route.path.replace('/api/v1', '')
+      (r) =>
+        r.method === request.method &&
+        r.path === request.route.path.replace('/api/v1', ''),
     );
 
     // Bypass guard if it's an excluded route
@@ -37,23 +43,24 @@ export class AuthGuard implements CanActivate {
     }
 
     const token = this.extractTokenFromRequest(request);
-    
-    if(!token){
-        throw new UnauthorizedException("Invalid Token");
+
+    if (!token) {
+      throw new UnauthorizedException('Invalid Token');
     }
 
-    try{
-        const payload = this.JwtService.verify(token);
+    try {
+      const payload = this.JwtService.verify(token);
 
-        request.userId = payload.userId;
-    }catch(e){
-        throw new UnauthorizedException("Invalid Token");
+      request.userId = payload.userId;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      throw new UnauthorizedException('Invalid Token');
     }
 
-    return  true;
+    return true;
   }
 
-  private extractTokenFromRequest(req: Request):  string|undefined{
-    return  req.headers.authorization?.split(' ')[1];
+  private extractTokenFromRequest(req: Request): string | undefined {
+    return req.headers.authorization?.split(' ')[1];
   }
 }

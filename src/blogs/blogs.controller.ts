@@ -38,7 +38,7 @@ export class BlogsController {
   }
 
   @Get('/user/:id')
-  async getBlogsOfParticularUser(@Param("id") user_id: number){
+  async getBlogsOfParticularUser(@Param('id') user_id: number) {
     return await this.blogsService.findAllBlogsOfParticularUser(user_id);
   }
 }

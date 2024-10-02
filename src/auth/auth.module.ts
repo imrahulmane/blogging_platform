@@ -10,8 +10,11 @@ import { ResetTokenEntity } from './reset-token.entity';
 import { MailService } from 'src/services/mail.service';
 
 @Module({
-  imports: [UserModule, TypeOrmModule.forFeature([RefreshTokenEntity, ResetTokenEntity])],
+  imports: [
+    UserModule,
+    TypeOrmModule.forFeature([RefreshTokenEntity, ResetTokenEntity]),
+  ],
   controllers: [AuthController],
-  providers: [AuthService, RefreshTokenService, ResetTokenService, MailService]
+  providers: [AuthService, RefreshTokenService, ResetTokenService, MailService],
 })
 export class AuthModule {}

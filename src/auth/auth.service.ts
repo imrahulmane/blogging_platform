@@ -14,7 +14,7 @@ import { ResetTokenService } from './reset-token.service';
 import { nanoid } from 'nanoid';
 import { MailService } from 'src/services/mail.service';
 import { resetPasswordDto } from './dto/reset-password.dto';
-
+import { UserEntity as User } from 'src/user/user.entity';
 @Injectable()
 export class AuthService {
     constructor(private readonly userService: UserService,
@@ -60,7 +60,7 @@ export class AuthService {
 
     }
 
-    async changePassword(data: changePasswordDto, userId: number): Promise<any>{
+    async changePassword(data: changePasswordDto, userId: number): Promise<User|null>{
         if(!userId){
             throw new BadRequestException("Data missing");
         }
@@ -79,7 +79,7 @@ export class AuthService {
 
         //hash new password
         const newHashedPassword = await this.hashPassword(data.newPassword);
-        return this.userService.updatePassword(userId, newHashedPassword);
+        return await this.userService.updatePassword(userId, newHashedPassword);
     }
 
     async forgotPassword(data: forgotPasswordDto): Promise<any>{
@@ -96,7 +96,7 @@ export class AuthService {
         return {"result" : "Please check your email for password reset link"};
     }
 
-    async resetPassword(data: resetPasswordDto): Promise<any>{
+    async resetPassword(data: resetPasswordDto): Promise<User|null>{
         //check valid token
         const validToken = await this.resetTokeService.findOne(data.token);
 
@@ -113,7 +113,7 @@ export class AuthService {
 
         //change password
         const hashedPassword = await this.hashPassword(data.newPassword);
-        return this.userService.updatePassword(validToken.user_id, hashedPassword);
+        return await this.userService.updatePassword(validToken.user_id, hashedPassword);
     }
 
     async getTokenFromRefreshToken(refTokenDto: refreshTokenDto):  Promise<any>{
