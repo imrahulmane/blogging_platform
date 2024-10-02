@@ -4,6 +4,7 @@ import { UpdateBlogDto } from './dto/update-blog.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Blog } from './entities/blog.entity';
 import { Repository } from 'typeorm';
+import { ErrorEnum } from '../utils/constants/error-constant-enum';
 
 @Injectable()
 export class BlogsService {
@@ -21,7 +22,7 @@ export class BlogsService {
 
   async findOne(id: number) {
     if (!id) {
-      throw new BadRequestException('Required id missing');
+      throw new BadRequestException(ErrorEnum.REQUIRED_ID_MISSING);
     }
 
     return await this.blogRepository.findOne({ where: { id } });
@@ -29,7 +30,7 @@ export class BlogsService {
 
   async update(id: number, updateBlogDto: UpdateBlogDto) {
     if (!id) {
-      throw new BadRequestException('Required id missing');
+      throw new BadRequestException(ErrorEnum.REQUIRED_ID_MISSING);
     }
 
     await this.blogRepository.update(id, updateBlogDto);
@@ -38,7 +39,7 @@ export class BlogsService {
 
   async remove(id: number) {
     if (!id) {
-      throw new BadRequestException('Required id missing');
+      throw new BadRequestException(ErrorEnum.REQUIRED_ID_MISSING);
     }
 
     return this.blogRepository.delete(id);
@@ -46,7 +47,7 @@ export class BlogsService {
 
   async findAllBlogsOfParticularUser(user_id: number) {
     if (!user_id) {
-      throw new BadRequestException('Required user ID missing');
+      throw new BadRequestException(ErrorEnum.REQUIRED_ID_MISSING);
     }
 
     return await this.blogRepository.findAndCount({

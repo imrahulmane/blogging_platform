@@ -13,12 +13,7 @@ export class RefreshTokenService {
   ) {}
 
   async create(token: string, user_id: number): Promise<void> {
-    const expiredAfterDays = Number(
-      this.configService.get('REFRESH_TOKEN_EXPIRY'),
-    );
-    const expires_in = new Date();
-    expires_in.setDate(expires_in.getDate() + expiredAfterDays);
-
+    const expires_in = this.getExpiresIn();
     await this.refreshTokenRepository.save({ token, user_id, expires_in });
   }
 
@@ -40,5 +35,14 @@ export class RefreshTokenService {
         expires_in: MoreThan(new Date()),
       },
     });
+  }
+
+  private getExpiresIn(): any {
+    const expiredAfterDays = Number(
+      this.configService.get('REFRESH_TOKEN_EXPIRY'),
+    );
+    const expires_in = new Date();
+    expires_in.setDate(expires_in.getDate() + expiredAfterDays);
+    return expires_in;
   }
 }
