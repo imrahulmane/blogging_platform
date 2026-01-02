@@ -17,6 +17,10 @@ export class RefreshTokenService {
     await this.refreshTokenRepository.save({ token, user_id, expires_in });
   }
 
+  async delete(user_id: number): Promise<void> {
+    await this.refreshTokenRepository.delete({ user_id });
+  }
+
   async getRefreshTokenFromUserId(
     userId: number,
   ): Promise<RefreshToken | null> {

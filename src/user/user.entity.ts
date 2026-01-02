@@ -13,6 +13,9 @@ export class UserEntity extends BaseEntity {
   @Column({ select: false })
   password: string;
 
+  @Column({ default: 0 })
+  token_version: number;
+
   @OneToMany(() => Blog, (blog) => blog.user)
   blogs: Blog[];
 }

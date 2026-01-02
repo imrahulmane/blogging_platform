@@ -16,6 +16,7 @@ import { refreshTokenDto } from './dto/refresh-token-dto';
 import { changePasswordDto } from './dto/change-password.dto';
 import { forgotPasswordDto } from './dto/forgot-password.dto';
 import { resetPasswordDto } from './dto/reset-password.dto';
+import { logoutDto } from './dto/logout.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -29,6 +30,11 @@ export class AuthController {
   @Post('login')
   login(@Body() body: signInDto) {
     return this.authService.login(body);
+  }
+
+  @Post('logout')
+  logout(@Req() req) {
+    return this.authService.logout(req.userId);
   }
 
   @Post('refresh')

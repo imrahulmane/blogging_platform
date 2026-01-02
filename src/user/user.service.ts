@@ -58,4 +58,8 @@ export class UserService {
     await this.userRepository.update(id, { password });
     return this.findById(id);
   }
+
+  async incrementTokenVersion(id: number): Promise<void> {
+    await this.userRepository.increment({ id }, 'token_version', 1);
+  }
 }

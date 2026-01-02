@@ -7,14 +7,18 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { Request } from 'express';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private JwtService: JwtService) {}
+  constructor(
+    private JwtService: JwtService,
+    private userService: UserService,
+  ) {}
 
-  canActivate(
+  async canActivate(
     context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  ): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
 
     const { route } = request;
@@ -50,6 +54,23 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload = this.JwtService.verify(token);
+
+      // Verify token version matches user's current token version
+      // Only check if tokenVersion exists in payload (for backward compatibility)
+      if (payload.tokenVersion !== undefined) {
+        const user = await this.userService.findById(payload.userId, [
+          'id',
+          'token_version',
+        ]);
+
+        if (!user) {
+          throw new UnauthorizedException('Invalid Token');
+        }
+
+        if (payload.tokenVersion !== user.token_version) {
+          throw new UnauthorizedException('Token has been invalidated');
+        }
+      }
 
       request.userId = payload.userId;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

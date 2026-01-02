@@ -21,6 +21,7 @@ import { MailService } from 'src/services/mail.service';
 import { resetPasswordDto } from './dto/reset-password.dto';
 import { UserEntity as User } from 'src/user/user.entity';
 import { ErrorEnum } from '../utils/constants/error-constant-enum';
+import { logger } from 'src/config/logger-config';
 
 @Injectable()
 export class AuthService {
@@ -59,6 +60,7 @@ export class AuthService {
       'email',
       'password',
       'username',
+      'token_version',
     ]);
 
     if (!user) {
@@ -71,7 +73,13 @@ export class AuthService {
       throw new UnauthorizedException(ErrorEnum.WRONG_CREDENTIALS);
     }
 
-    return this.generateToken(user.id, user.username);
+    return this.generateToken(user.id, user.username, user.token_version);
+  }
+
+  async logout(userId: number): Promise<any> {
+    await this.refreshTokenService.delete(userId);
+    await this.userService.incrementTokenVersion(userId);
+    return { result: 'Logged out successfully' };
   }
 
   async changePassword(
@@ -98,7 +106,15 @@ export class AuthService {
 
     //hash new password
     const newHashedPassword = await this.hashPassword(data.newPassword);
-    return await this.userService.updatePassword(userId, newHashedPassword);
+    
+    // Update password FIRST to ensure user can still log in if token invalidation fails
+    const updatedUser = await this.userService.updatePassword(userId, newHashedPassword);
+    
+    // Only invalidate tokens after password is successfully updated
+    await this.userService.incrementTokenVersion(userId);
+    await this.refreshTokenService.delete(userId);
+    
+    return updatedUser;
   }
 
   async forgotPassword(data: forgotPasswordDto): Promise<any> {
@@ -132,10 +148,21 @@ export class AuthService {
 
     //change password
     const hashedPassword = await this.hashPassword(data.newPassword);
-    return await this.userService.updatePassword(
+    
+    // Update password FIRST to ensure user can still log in if token invalidation fails
+    const updatedUser = await this.userService.updatePassword(
       validToken.user_id,
       hashedPassword,
     );
+    
+    // Only invalidate tokens after password is successfully updated
+    await this.userService.incrementTokenVersion(validToken.user_id);
+    await this.refreshTokenService.delete(validToken.user_id);
+    
+    // Delete the used reset token to make it single-use
+    await this.resetTokeService.deleteByUserId(validToken.user_id);
+    
+    return updatedUser;
   }
 
   async getTokenFromRefreshToken(refTokenDto: refreshTokenDto): Promise<any> {
@@ -148,13 +175,33 @@ export class AuthService {
       throw new UnauthorizedException(ErrorEnum.INVALID_TOKEN);
     }
 
-    const user = await this.userService.findById(result.user_id);
+    const user = await this.userService.findById(result.user_id, [
+      'id',
+      'username',
+      'token_version',
+    ]);
 
-    return this.generateToken(user.id, user.username);
+    if (!user) {
+      throw new UnauthorizedException(ErrorEnum.INVALID_TOKEN);
+    }
+
+    // Delete the old refresh token (rotation)
+    await this.refreshTokenService.delete(user.id);
+
+    // Generate new tokens (which will create a new refresh token)
+    return this.generateTokenWithRotation(user.id, user.username, user.token_version);
   }
 
-  private async generateToken(userId: number, userName: string) {
-    const acessToken = this.jwtService.sign({ userName, userId });
+  private async generateToken(
+    userId: number,
+    userName: string,
+    tokenVersion: number,
+  ) {
+    const acessToken = this.jwtService.sign({
+      userName,
+      userId,
+      tokenVersion,
+    });
 
     // Find token that haven't expired
     const dbRefToken =
@@ -164,6 +211,24 @@ export class AuthService {
       return { acessToken, refreshToken: dbRefToken.token };
     }
 
+    const refreshToken = uuidv4();
+    await this.refreshTokenService.create(refreshToken, userId);
+
+    return { acessToken, refreshToken };
+  }
+
+  private async generateTokenWithRotation(
+    userId: number,
+    userName: string,
+    tokenVersion: number,
+  ) {
+    const acessToken = this.jwtService.sign({
+      userName,
+      userId,
+      tokenVersion,
+    });
+
+    // Always create a new refresh token (rotation)
     const refreshToken = uuidv4();
     await this.refreshTokenService.create(refreshToken, userId);
 

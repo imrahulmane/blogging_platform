@@ -36,4 +36,12 @@ export class ResetTokenService {
       where: { token, expires_in: MoreThan(new Date()) },
     });
   }
+
+  async deleteByToken(token: string): Promise<void> {
+    await this.resetTokenRepository.delete({ token });
+  }
+
+  async deleteByUserId(user_id: number): Promise<void> {
+    await this.resetTokenRepository.delete({ user_id });
+  }
 }
